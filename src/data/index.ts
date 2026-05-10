@@ -2,12 +2,14 @@ import type { Question, MathCategory, Year } from "../types/question";
 import r4MathQuestions from "./questions/math/past-exams/r4";
 import r5MathQuestions from "./questions/math/past-exams/r5";
 import r6MathQuestions from "./questions/math/past-exams/r6";
+import r7MathQuestions from "./questions/math/past-exams/r7";
 import generatedTimeQuestions from "./questions/math/generated/time";
 
 export const allQuestions: Question[] = [
   ...r4MathQuestions,
   ...r5MathQuestions,
   ...r6MathQuestions,
+  ...r7MathQuestions,
   ...generatedTimeQuestions,
 ];
 
@@ -29,6 +31,7 @@ export const YEARS: { value: Year; label: string }[] = [
   { value: "R4", label: "令和4年度" },
   { value: "R5", label: "令和5年度" },
   { value: "R6", label: "令和6年度" },
+  { value: "R7", label: "令和7年度" },
 ];
 
 export const CATEGORIES: { value: MathCategory; label: string }[] = [
