@@ -1,19 +1,24 @@
 import { useState } from "react";
 import type { Question } from "../types/question";
 import { checkAnswer } from "../utils/grading";
+import { getAnswerHint } from "../utils/answerHint";
 import TableDisplay from "./TableDisplay";
+
+interface SavedState {
+  userAnswer: string;
+  isCorrect: boolean;
+}
 
 interface Props {
   questions: Question[];
   groupStartNumber: number;
   totalQuestions: number;
-  onGroupAnswer: (results: boolean[]) => void;
+  savedStates?: Record<string, SavedState>; // keyed by question.id
+  onBack?: () => void;
+  onGroupAnswer: (results: boolean[], userAnswers: string[]) => void;
   onNext: () => void;
 }
 
-// Split questionText into passage and question parts.
-// Reading questions use 【問い】 as a marker.
-// Document questions end the passage at the last blank line before the question sentence.
 function extractParts(text: string): { passage: string; question: string } {
   const markerIdx = text.indexOf("【問い】");
   if (markerIdx !== -1) {
@@ -36,12 +41,10 @@ function buildPassageText(questions: Question[]): string {
   const parts = questions.map((q) => extractParts(q.questionText));
   const passages = parts.map((p) => p.passage);
 
-  // If all passages are identical (document groups), show once
   if (passages.every((p) => p === passages[0])) {
     return passages[0];
   }
 
-  // Reading groups: each question has a different paragraph — combine in order
   const seen = new Set<string>();
   const paragraphs: string[] = [];
   for (const p of passages) {
@@ -58,12 +61,20 @@ export default function PassageGroupCard({
   questions,
   groupStartNumber,
   totalQuestions,
+  savedStates,
+  onBack,
   onGroupAnswer,
   onNext,
 }: Props) {
-  const [answers, setAnswers] = useState<string[]>(() => questions.map(() => ""));
-  const [submitted, setSubmitted] = useState(false);
-  const [correctness, setCorrectness] = useState<boolean[]>([]);
+  const isReview = !!savedStates && questions.every((q) => savedStates[q.id] !== undefined);
+
+  const [answers, setAnswers] = useState<string[]>(() =>
+    questions.map((q) => savedStates?.[q.id]?.userAnswer ?? "")
+  );
+  const [submitted, setSubmitted] = useState(isReview);
+  const [correctness, setCorrectness] = useState<boolean[]>(() =>
+    isReview ? questions.map((q) => savedStates![q.id].isCorrect) : []
+  );
 
   const allFilled = answers.every((a) => a.trim() !== "");
   const lastNumber = groupStartNumber + questions.length - 1;
@@ -75,7 +86,7 @@ export default function PassageGroupCard({
     const results = questions.map((q, i) => checkAnswer(answers[i], q.answer));
     setCorrectness(results);
     setSubmitted(true);
-    onGroupAnswer(results);
+    onGroupAnswer(results, answers);
   };
 
   return (
@@ -105,6 +116,7 @@ export default function PassageGroupCard({
         {questions.map((q, idx) => {
           const answer = answers[idx];
           const isCorrect = correctness[idx];
+          const hint = getAnswerHint(q);
 
           return (
             <div
@@ -189,17 +201,24 @@ export default function PassageGroupCard({
 
               {/* テキスト入力 */}
               {(q.type === "text" || q.type === "number") && !submitted && (
-                <input
-                  type="text"
-                  value={answer}
-                  onChange={(e) => {
-                    const next = [...answers];
-                    next[idx] = e.target.value;
-                    setAnswers(next);
-                  }}
-                  placeholder="答えを入力"
-                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-lg focus:border-blue-500 focus:outline-none"
-                />
+                <>
+                  {hint && (
+                    <p className="text-gray-400 text-sm tracking-widest font-mono mb-1">
+                      {hint}
+                    </p>
+                  )}
+                  <input
+                    type="text"
+                    value={answer}
+                    onChange={(e) => {
+                      const next = [...answers];
+                      next[idx] = e.target.value;
+                      setAnswers(next);
+                    }}
+                    placeholder="答えを入力"
+                    className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-lg focus:border-blue-500 focus:outline-none"
+                  />
+                </>
               )}
 
               {/* フィードバック */}
@@ -225,7 +244,7 @@ export default function PassageGroupCard({
         })}
       </div>
 
-      {/* 送信 / 次へ ボタン */}
+      {/* 送信 / ナビゲーション */}
       <div className="mt-5 mb-8">
         {!submitted ? (
           <button
@@ -236,12 +255,22 @@ export default function PassageGroupCard({
             答えを確認する
           </button>
         ) : (
-          <button
-            onClick={onNext}
-            className="w-full bg-blue-500 text-white text-xl font-bold py-4 rounded-xl hover:bg-blue-600 transition-colors"
-          >
-            次の問題 →
-          </button>
+          <div className="flex gap-3">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="flex-1 bg-gray-200 text-gray-700 text-lg font-bold py-4 rounded-xl hover:bg-gray-300 transition-colors"
+              >
+                ← 前の問題
+              </button>
+            )}
+            <button
+              onClick={onNext}
+              className="flex-1 bg-blue-500 text-white text-lg font-bold py-4 rounded-xl hover:bg-blue-600 transition-colors"
+            >
+              次の問題 →
+            </button>
+          </div>
         )}
       </div>
     </div>

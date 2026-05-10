@@ -8,6 +8,11 @@ import QuestionCard from "../components/QuestionCard";
 import PassageGroupCard from "../components/PassageGroupCard";
 import ResultSummary from "../components/ResultSummary";
 
+interface AnswerRecord {
+  userAnswer: string;
+  isCorrect: boolean;
+}
+
 function findGroupBounds(questions: Question[], index: number): { start: number; end: number } {
   const pid = questions[index]?.passageId;
   if (!pid) return { start: index, end: index + 1 };
@@ -27,9 +32,10 @@ export default function PracticePage() {
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [results, setResults] = useState<boolean[]>([]);
+  // keyed by question.id
+  const [questionAnswers, setQuestionAnswers] = useState<Record<string, AnswerRecord>>({});
   const [done, setDone] = useState(false);
-  const [resumePrompt, setResumePrompt] = useState<{ index: number; preResults: boolean[] } | null>(null);
+  const [resumePrompt, setResumePrompt] = useState<{ index: number; preAnswers: Record<string, AnswerRecord> } | null>(null);
 
   useEffect(() => {
     let qs: Question[] = [];
@@ -47,7 +53,7 @@ export default function PracticePage() {
     const ordered = mode === "year" ? qs : shuffle(qs);
     setQuestions(ordered);
     setCurrentIndex(0);
-    setResults([]);
+    setQuestionAnswers({});
     setDone(false);
     setResumePrompt(null);
 
@@ -56,12 +62,13 @@ export default function PracticePage() {
       if (latestResults.size > 0) {
         const firstUnanswered = ordered.findIndex((q) => !latestResults.has(q.id));
         if (firstUnanswered > 0 && firstUnanswered < ordered.length) {
-          // Snap to the start of the group containing the first unanswered question
           const { start } = findGroupBounds(ordered, firstUnanswered);
-          const preResults = ordered.slice(0, start).map((q) => {
-            return latestResults.get(q.id)?.correct ?? false;
+          const preAnswers: Record<string, AnswerRecord> = {};
+          ordered.slice(0, start).forEach((q) => {
+            const r = latestResults.get(q.id);
+            if (r) preAnswers[q.id] = { userAnswer: "", isCorrect: r.correct };
           });
-          setResumePrompt({ index: start, preResults });
+          setResumePrompt({ index: start, preAnswers });
         }
       }
     }
@@ -70,18 +77,17 @@ export default function PracticePage() {
   const handleResume = () => {
     if (!resumePrompt) return;
     setCurrentIndex(resumePrompt.index);
-    setResults(resumePrompt.preResults);
+    setQuestionAnswers(resumePrompt.preAnswers);
     setResumePrompt(null);
   };
 
   const handleRestart = () => {
     setCurrentIndex(0);
-    setResults([]);
+    setQuestionAnswers({});
     setResumePrompt(null);
   };
 
-  const handleAnswer = (correct: boolean) => {
-    const q = questions[currentIndex];
+  const saveAndRecord = (q: Question, correct: boolean) => {
     saveResult({
       questionId: q.id,
       correct,
@@ -90,7 +96,12 @@ export default function PracticePage() {
       year: mode === "year" ? value : undefined,
       subject: mode === "year" ? subject : undefined,
     });
-    setResults((prev) => [...prev, correct]);
+  };
+
+  const handleAnswer = (correct: boolean, userAnswer: string) => {
+    const q = questions[currentIndex];
+    saveAndRecord(q, correct);
+    setQuestionAnswers((prev) => ({ ...prev, [q.id]: { userAnswer, isCorrect: correct } }));
   };
 
   const handleNext = () => {
@@ -101,18 +112,29 @@ export default function PracticePage() {
     }
   };
 
-  const handleGroupAnswer = (groupQuestions: Question[], groupResults: boolean[]) => {
+  const handleBack = () => {
+    const newIdx = currentIndex - 1;
+    if (newIdx < 0) return;
+    const q = questions[newIdx];
+    if (q?.passageId) {
+      const { start } = findGroupBounds(questions, newIdx);
+      setCurrentIndex(start);
+    } else {
+      setCurrentIndex(newIdx);
+    }
+  };
+
+  const handleGroupAnswer = (
+    groupQuestions: Question[],
+    groupResults: boolean[],
+    userAnswers: string[]
+  ) => {
+    const updates: Record<string, AnswerRecord> = {};
     groupQuestions.forEach((q, i) => {
-      saveResult({
-        questionId: q.id,
-        correct: groupResults[i],
-        timestamp: Date.now(),
-        category: q.category,
-        year: mode === "year" ? value : undefined,
-        subject: mode === "year" ? subject : undefined,
-      });
+      saveAndRecord(q, groupResults[i]);
+      updates[q.id] = { userAnswer: userAnswers[i], isCorrect: groupResults[i] };
     });
-    setResults((prev) => [...prev, ...groupResults]);
+    setQuestionAnswers((prev) => ({ ...prev, ...updates }));
   };
 
   const handleGroupNext = (groupSize: number) => {
@@ -126,7 +148,7 @@ export default function PracticePage() {
   const handleRetry = () => {
     setQuestions((qs) => shuffle([...qs]));
     setCurrentIndex(0);
-    setResults([]);
+    setQuestionAnswers({});
     setDone(false);
   };
 
@@ -139,11 +161,12 @@ export default function PracticePage() {
   }
 
   if (done) {
+    const finalResults = questions.map((q) => questionAnswers[q.id]?.isCorrect ?? false);
     return (
       <div className="min-h-screen bg-gradient-to-b from-sky-100 to-blue-50 py-6">
         <ResultSummary
           questions={questions}
-          results={results}
+          results={finalResults}
           onRetry={handleRetry}
           onHome={() => navigate("/")}
           yearMode={mode === "year" ? { year: value, subject } : undefined}
@@ -160,7 +183,6 @@ export default function PracticePage() {
   const currentQuestion = questions[currentIndex];
   const passageId = currentQuestion?.passageId;
 
-  // Determine if current position is the start of a passage group
   let groupQuestions: Question[] | null = null;
   if (passageId) {
     const { start, end } = findGroupBounds(questions, currentIndex);
@@ -168,6 +190,8 @@ export default function PracticePage() {
       groupQuestions = questions.slice(start, end);
     }
   }
+
+  const canGoBack = currentIndex > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-100 to-blue-50 py-6">
@@ -207,17 +231,31 @@ export default function PracticePage() {
 
       {groupQuestions ? (
         <PassageGroupCard
+          key={currentIndex}
           questions={groupQuestions}
           groupStartNumber={currentIndex + 1}
           totalQuestions={questions.length}
-          onGroupAnswer={(groupResults) => handleGroupAnswer(groupQuestions!, groupResults)}
+          savedStates={
+            groupQuestions.every((q) => questionAnswers[q.id])
+              ? Object.fromEntries(
+                  groupQuestions.map((q) => [q.id, questionAnswers[q.id]])
+                )
+              : undefined
+          }
+          onBack={canGoBack ? handleBack : undefined}
+          onGroupAnswer={(results, userAnswers) =>
+            handleGroupAnswer(groupQuestions!, results, userAnswers)
+          }
           onNext={() => handleGroupNext(groupQuestions!.length)}
         />
       ) : (
         <QuestionCard
+          key={currentIndex}
           question={currentQuestion}
           questionNumber={currentIndex + 1}
           totalQuestions={questions.length}
+          savedState={questionAnswers[currentQuestion?.id]}
+          onBack={canGoBack ? handleBack : undefined}
           onAnswer={handleAnswer}
           onNext={handleNext}
         />
