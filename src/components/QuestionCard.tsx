@@ -100,7 +100,7 @@ export default function QuestionCard({
             type="text"
             value={userAnswer}
             onChange={(e) => setUserAnswer(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAnswer()}
+            onKeyDown={(e) => e.key === "Enter" && !e.nativeEvent.isComposing && handleAnswer()}
             placeholder="答えを入力してください"
             className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-xl mt-4 focus:border-blue-500 focus:outline-none"
           />
