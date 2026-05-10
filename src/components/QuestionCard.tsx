@@ -187,7 +187,7 @@ export default function QuestionCard({
             <p className="text-gray-600 leading-relaxed">{question.explanation}</p>
           </div>
 
-          <div className={`flex gap-3 mt-4 ${onBack ? "" : ""}`}>
+          <div className="flex gap-3 mt-4">
             {onBack && (
               <button
                 onClick={onBack}
