@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import type { Question } from "../types/question";
-import {
-  getQuestionsByYear,
-  getQuestionsByCategory,
-  getGeneratedQuestions,
-} from "../data";
-import type { Year } from "../types/question";
+import type { Question, Year } from "../types/question";
+import { getQuestionsByYear, getQuestionsByCategory, getGeneratedQuestions } from "../data";
 import { shuffle } from "../utils/shuffle";
 import { saveResult } from "../utils/storage";
 import QuestionCard from "../components/QuestionCard";
@@ -91,7 +86,6 @@ export default function PracticePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-100 to-blue-50 py-6">
-      {/* 戻るボタン */}
       <div className="max-w-2xl mx-auto px-4 mb-2">
         <button
           onClick={() => navigate("/")}

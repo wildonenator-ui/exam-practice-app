@@ -12,16 +12,14 @@ export default function HomePage() {
         {/* ヘッダー */}
         <div className="text-center py-8">
           <h1 className="text-3xl md:text-4xl font-bold text-blue-700 mb-2">
-            📚 かこもん練習アプリ
+            かこもん練習アプリ
           </h1>
           <p className="text-gray-600 text-lg">算数の過去問を解いて実力をつけよう！</p>
         </div>
 
         {/* 年度別 */}
         <section className="mb-6">
-          <h2 className="text-xl font-bold text-gray-700 mb-3 flex items-center gap-2">
-            📅 年度別に解く
-          </h2>
+          <h2 className="text-xl font-bold text-gray-700 mb-3">年度別に解く</h2>
           <div className="grid grid-cols-1 gap-3">
             {YEARS.map((y) => (
               <button
@@ -38,9 +36,7 @@ export default function HomePage() {
 
         {/* 分野別 */}
         <section className="mb-6">
-          <h2 className="text-xl font-bold text-gray-700 mb-3 flex items-center gap-2">
-            📐 分野別に解く
-          </h2>
+          <h2 className="text-xl font-bold text-gray-700 mb-3">分野別に解く</h2>
           <div className="grid grid-cols-2 gap-3">
             {CATEGORIES.map((cat) => {
               const s = stats[cat.value];
@@ -53,7 +49,7 @@ export default function HomePage() {
                 >
                   <span className="text-base font-bold text-blue-700">{cat.label}</span>
                   {rate !== null && (
-                    <div className="mt-1">
+                    <div className="mt-2">
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
                           className="bg-green-400 h-2 rounded-full"
@@ -71,9 +67,7 @@ export default function HomePage() {
 
         {/* 疑似問題 */}
         <section className="mb-6">
-          <h2 className="text-xl font-bold text-gray-700 mb-3 flex items-center gap-2">
-            ✨ 疑似問題を解く
-          </h2>
+          <h2 className="text-xl font-bold text-gray-700 mb-3">疑似問題を解く</h2>
           <div className="grid grid-cols-1 gap-3">
             {GENERATED_CATEGORIES.map((cat) => (
               <button

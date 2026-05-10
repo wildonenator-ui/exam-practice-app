@@ -37,9 +37,13 @@ export default function QuestionCard({
     onNext();
   };
 
+  const correctAnswerDisplay = Array.isArray(question.answer)
+    ? question.answer[0]
+    : question.answer;
+
   return (
     <div className="max-w-2xl mx-auto p-4">
-      {/* 進捗 */}
+      {/* 進捗バー */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-lg font-bold text-gray-600">
           {questionNumber} / {totalQuestions}
@@ -58,14 +62,17 @@ export default function QuestionCard({
           <span className="bg-blue-100 text-blue-700 text-sm font-bold px-3 py-1 rounded-full">
             {question.title}
           </span>
+          {question.year && (
+            <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+              {question.year}
+            </span>
+          )}
         </div>
 
-        {/* 問題文 */}
         <p className="text-lg leading-relaxed whitespace-pre-wrap mb-3">
           {question.questionText}
         </p>
 
-        {/* 表 */}
         {question.table && <TableDisplay table={question.table} />}
 
         {/* 選択式 */}
@@ -75,7 +82,7 @@ export default function QuestionCard({
               <button
                 key={choice}
                 onClick={() => setUserAnswer(choice)}
-                className={`py-3 px-4 rounded-xl border-2 text-lg font-bold transition-all ${
+                className={`py-4 px-4 rounded-xl border-2 text-lg font-bold transition-all ${
                   userAnswer === choice
                     ? "border-blue-500 bg-blue-50 text-blue-700"
                     : "border-gray-300 bg-white hover:border-blue-300"
@@ -99,7 +106,6 @@ export default function QuestionCard({
           />
         )}
 
-        {/* 答えるボタン */}
         {!answered && (
           <button
             onClick={handleAnswer}
@@ -115,16 +121,18 @@ export default function QuestionCard({
       {answered && (
         <div
           className={`rounded-2xl p-5 mb-4 ${
-            isCorrect ? "bg-green-50 border-2 border-green-400" : "bg-orange-50 border-2 border-orange-400"
+            isCorrect
+              ? "bg-green-50 border-2 border-green-400"
+              : "bg-orange-50 border-2 border-orange-400"
           }`}
         >
           <p className={`text-2xl font-bold mb-2 ${isCorrect ? "text-green-600" : "text-orange-600"}`}>
-            {isCorrect ? "🎉 正解！" : "💡 もう少し！"}
+            {isCorrect ? "正解！" : "もう少し！"}
           </p>
           {!isCorrect && (
             <p className="text-lg mb-2">
               <span className="font-bold">正しい答え：</span>
-              {Array.isArray(question.answer) ? question.answer.join("、") : question.answer}
+              {correctAnswerDisplay}
             </p>
           )}
           <div className="mt-3 p-3 bg-white rounded-xl">
