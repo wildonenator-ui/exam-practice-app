@@ -21,6 +21,7 @@ export default function QuestionCard({
   const [userAnswer, setUserAnswer] = useState("");
   const [answered, setAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [composing, setComposing] = useState(false);
 
   const handleAnswer = () => {
     if (!userAnswer.trim()) return;
@@ -100,7 +101,9 @@ export default function QuestionCard({
             type="text"
             value={userAnswer}
             onChange={(e) => setUserAnswer(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.nativeEvent.isComposing && handleAnswer()}
+            onCompositionStart={() => setComposing(true)}
+            onCompositionEnd={() => setComposing(false)}
+            onKeyDown={(e) => e.key === "Enter" && !composing && handleAnswer()}
             placeholder="答えを入力してください"
             className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-xl mt-4 focus:border-blue-500 focus:outline-none"
           />
