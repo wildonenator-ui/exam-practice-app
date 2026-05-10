@@ -1,18 +1,15 @@
 import type { Question, MathCategory, JapaneseCategory, Year } from "../types/question";
-import r4MathQuestions from "./questions/math/past-exams/r4";
 import r5MathQuestions from "./questions/math/past-exams/r5";
 import r6MathQuestions from "./questions/math/past-exams/r6";
 import r7MathQuestions from "./questions/math/past-exams/r7";
 import r8MathQuestions from "./questions/math/past-exams/r8";
 import generatedTimeQuestions from "./questions/math/generated/time";
-import r4JapaneseQuestions from "./questions/japanese/past-exams/r4";
 import r5JapaneseQuestions from "./questions/japanese/past-exams/r5";
 import r6JapaneseQuestions from "./questions/japanese/past-exams/r6";
 import r7JapaneseQuestions from "./questions/japanese/past-exams/r7";
 import r8JapaneseQuestions from "./questions/japanese/past-exams/r8";
 
 export const allMathQuestions: Question[] = [
-  ...r4MathQuestions,
   ...r5MathQuestions,
   ...r6MathQuestions,
   ...r7MathQuestions,
@@ -21,7 +18,6 @@ export const allMathQuestions: Question[] = [
 ];
 
 export const allJapaneseQuestions: Question[] = [
-  ...r4JapaneseQuestions,
   ...r5JapaneseQuestions,
   ...r6JapaneseQuestions,
   ...r7JapaneseQuestions,
@@ -45,7 +41,6 @@ export function getGeneratedQuestions(category?: string): Question[] {
 }
 
 export const YEARS: { value: Year; label: string }[] = [
-  { value: "R4", label: "令和4年度" },
   { value: "R5", label: "令和5年度" },
   { value: "R6", label: "令和6年度" },
   { value: "R7", label: "令和7年度" },
