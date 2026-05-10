@@ -3,6 +3,8 @@ export interface QuestionResult {
   correct: boolean;
   timestamp: number;
   category: string;
+  year?: string;
+  subject?: string;
 }
 
 const STORAGE_KEY = "exam-practice-history";
@@ -10,7 +12,7 @@ const STORAGE_KEY = "exam-practice-history";
 export function saveResult(result: QuestionResult): void {
   const history = getHistory();
   history.push(result);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(-1000)));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(-2000)));
 }
 
 export function getHistory(): QuestionResult[] {
@@ -33,6 +35,23 @@ export function getCategoryStats(): Record<string, { correct: number; total: num
     if (result.correct) stats[result.category].correct++;
   }
   return stats;
+}
+
+// Returns the most recent result per question for a given year+subject
+export function getLatestYearResults(
+  year: string,
+  subject: string
+): Map<string, QuestionResult> {
+  const history = getHistory();
+  const map = new Map<string, QuestionResult>();
+  for (const r of history) {
+    if (r.year !== year || r.subject !== subject) continue;
+    const existing = map.get(r.questionId);
+    if (!existing || r.timestamp > existing.timestamp) {
+      map.set(r.questionId, r);
+    }
+  }
+  return map;
 }
 
 export function clearHistory(): void {

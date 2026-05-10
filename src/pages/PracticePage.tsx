@@ -11,7 +11,8 @@ export default function PracticePage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const mode = searchParams.get("mode") ?? "year";
-  const value = searchParams.get("value") ?? "R4";
+  const value = searchParams.get("value") ?? "R5";
+  const subject = searchParams.get("subject") ?? "math";
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -21,7 +22,7 @@ export default function PracticePage() {
   useEffect(() => {
     let qs: Question[] = [];
     if (mode === "year") {
-      qs = getQuestionsByYear(value as Year);
+      qs = getQuestionsByYear(value as Year, subject);
     } else if (mode === "category") {
       qs = getQuestionsByCategory(value);
     } else if (mode === "generated") {
@@ -31,11 +32,11 @@ export default function PracticePage() {
       navigate("/");
       return;
     }
-    setQuestions(shuffle(qs));
+    setQuestions(mode === "year" ? qs : shuffle(qs));
     setCurrentIndex(0);
     setResults([]);
     setDone(false);
-  }, [mode, value, navigate]);
+  }, [mode, value, subject, navigate]);
 
   const handleAnswer = (correct: boolean) => {
     const q = questions[currentIndex];
@@ -44,6 +45,8 @@ export default function PracticePage() {
       correct,
       timestamp: Date.now(),
       category: q.category,
+      year: mode === "year" ? value : undefined,
+      subject: mode === "year" ? subject : undefined,
     });
     setResults((prev) => [...prev, correct]);
   };
@@ -79,6 +82,12 @@ export default function PracticePage() {
           results={results}
           onRetry={handleRetry}
           onHome={() => navigate("/")}
+          yearMode={mode === "year" ? { year: value, subject } : undefined}
+          onReview={
+            mode === "year"
+              ? () => navigate(`/review?year=${value}&subject=${subject}`)
+              : undefined
+          }
         />
       </div>
     );

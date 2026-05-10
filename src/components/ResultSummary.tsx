@@ -5,9 +5,11 @@ interface Props {
   results: boolean[];
   onRetry: () => void;
   onHome: () => void;
+  yearMode?: { year: string; subject: string };
+  onReview?: () => void;
 }
 
-export default function ResultSummary({ questions, results, onRetry, onHome }: Props) {
+export default function ResultSummary({ questions, results, onRetry, onHome, onReview }: Props) {
   const correct = results.filter(Boolean).length;
   const total = results.length;
   const rate = total > 0 ? Math.round((correct / total) * 100) : 0;
@@ -53,6 +55,14 @@ export default function ResultSummary({ questions, results, onRetry, onHome }: P
       )}
 
       <div className="flex flex-col gap-3">
+        {onReview && (
+          <button
+            onClick={onReview}
+            className="w-full bg-green-500 text-white text-xl font-bold py-4 rounded-xl hover:bg-green-600 transition-colors"
+          >
+            振り返りを見る
+          </button>
+        )}
         <button
           onClick={onRetry}
           className="w-full bg-blue-500 text-white text-xl font-bold py-4 rounded-xl hover:bg-blue-600 transition-colors"
