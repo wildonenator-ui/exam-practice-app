@@ -11,6 +11,49 @@ interface Props {
   onNext: () => void;
 }
 
+// Split questionText into passage and question parts.
+// Reading questions use 【問い】 as a marker.
+// Document questions end the passage at the last blank line before the question sentence.
+function extractParts(text: string): { passage: string; question: string } {
+  const markerIdx = text.indexOf("【問い】");
+  if (markerIdx !== -1) {
+    return {
+      passage: text.slice(0, markerIdx).trim(),
+      question: text.slice(markerIdx + "【問い】".length).trim(),
+    };
+  }
+  const lastBreak = text.lastIndexOf("\n\n");
+  if (lastBreak !== -1) {
+    return {
+      passage: text.slice(0, lastBreak).trim(),
+      question: text.slice(lastBreak).trim(),
+    };
+  }
+  return { passage: "", question: text };
+}
+
+function buildPassageText(questions: Question[]): string {
+  const parts = questions.map((q) => extractParts(q.questionText));
+  const passages = parts.map((p) => p.passage);
+
+  // If all passages are identical (document groups), show once
+  if (passages.every((p) => p === passages[0])) {
+    return passages[0];
+  }
+
+  // Reading groups: each question has a different paragraph — combine in order
+  const seen = new Set<string>();
+  const paragraphs: string[] = [];
+  for (const p of passages) {
+    const clean = p.replace(/^【文章】\s*/, "").trim();
+    if (clean && !seen.has(clean)) {
+      seen.add(clean);
+      paragraphs.push(clean);
+    }
+  }
+  return paragraphs.join("\n\n");
+}
+
 export default function PassageGroupCard({
   questions,
   groupStartNumber,
@@ -25,15 +68,14 @@ export default function PassageGroupCard({
   const allFilled = answers.every((a) => a.trim() !== "");
   const lastNumber = groupStartNumber + questions.length - 1;
 
+  const passageText = buildPassageText(questions);
+  const questionParts = questions.map((q) => extractParts(q.questionText).question);
+
   const handleSubmit = () => {
     const results = questions.map((q, i) => checkAnswer(answers[i], q.answer));
     setCorrectness(results);
     setSubmitted(true);
     onGroupAnswer(results);
-  };
-
-  const handleNext = () => {
-    onNext();
   };
 
   return (
@@ -51,7 +93,14 @@ export default function PassageGroupCard({
         </div>
       </div>
 
-      {/* 問題一覧 */}
+      {/* 文章全文 */}
+      {passageText && (
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 mb-4">
+          <p className="text-base leading-relaxed whitespace-pre-wrap">{passageText}</p>
+        </div>
+      )}
+
+      {/* 設問一覧 */}
       <div className="space-y-4">
         {questions.map((q, idx) => {
           const answer = answers[idx];
@@ -65,12 +114,12 @@ export default function PassageGroupCard({
                   ? isCorrect
                     ? "border-2 border-green-400"
                     : "border-2 border-orange-400"
-                  : ""
+                  : "border border-gray-100"
               }`}
             >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="bg-blue-100 text-blue-700 text-sm font-bold px-3 py-1 rounded-full">
-                  {q.title}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-full">
+                  設問{idx + 1}
                 </span>
                 {submitted && (
                   <span
@@ -84,14 +133,14 @@ export default function PassageGroupCard({
               </div>
 
               <p className="text-base leading-relaxed whitespace-pre-wrap mb-3">
-                {q.questionText}
+                {questionParts[idx]}
               </p>
 
               {q.table && <TableDisplay table={q.table} />}
 
-              {/* 選択式 */}
+              {/* 選択式（未回答） */}
               {q.type === "single_choice" && q.choices && !submitted && (
-                <div className="grid grid-cols-2 gap-2 mt-3">
+                <div className="grid grid-cols-2 gap-2">
                   {q.choices.map((choice) => (
                     <button
                       key={choice}
@@ -112,9 +161,9 @@ export default function PassageGroupCard({
                 </div>
               )}
 
-              {/* 選択式（回答済み表示） */}
+              {/* 選択式（回答済み） */}
               {q.type === "single_choice" && q.choices && submitted && (
-                <div className="grid grid-cols-2 gap-2 mt-3">
+                <div className="grid grid-cols-2 gap-2">
                   {q.choices.map((choice) => {
                     const isSelected = answer === choice;
                     const isCorrectChoice = Array.isArray(q.answer)
@@ -149,29 +198,25 @@ export default function PassageGroupCard({
                     setAnswers(next);
                   }}
                   placeholder="答えを入力"
-                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-lg mt-3 focus:border-blue-500 focus:outline-none"
+                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-lg focus:border-blue-500 focus:outline-none"
                 />
               )}
 
               {/* フィードバック */}
               {submitted && (
                 <div className="mt-3">
+                  {(q.type === "text" || q.type === "number") && (
+                    <p className="text-sm text-gray-500 mb-1">あなたの答え：{answer}</p>
+                  )}
                   {!isCorrect && (
-                    <p className="text-base mb-1">
+                    <p className="text-base mb-2">
                       <span className="font-bold">正しい答え：</span>
                       {Array.isArray(q.answer) ? q.answer[0] : q.answer}
                     </p>
                   )}
-                  {(q.type === "text" || q.type === "number") && answer && (
-                    <p className="text-sm text-gray-500 mb-1">
-                      あなたの答え：{answer}
-                    </p>
-                  )}
                   <div className="p-3 bg-gray-50 rounded-xl">
                     <p className="font-bold text-gray-700 text-sm mb-1">考え方：</p>
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      {q.explanation}
-                    </p>
+                    <p className="text-gray-600 text-sm leading-relaxed">{q.explanation}</p>
                   </div>
                 </div>
               )}
@@ -181,7 +226,7 @@ export default function PassageGroupCard({
       </div>
 
       {/* 送信 / 次へ ボタン */}
-      <div className="mt-5">
+      <div className="mt-5 mb-8">
         {!submitted ? (
           <button
             onClick={handleSubmit}
@@ -192,7 +237,7 @@ export default function PassageGroupCard({
           </button>
         ) : (
           <button
-            onClick={handleNext}
+            onClick={onNext}
             className="w-full bg-blue-500 text-white text-xl font-bold py-4 rounded-xl hover:bg-blue-600 transition-colors"
           >
             次の問題 →
