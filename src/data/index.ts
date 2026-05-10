@@ -17,12 +17,41 @@ export const allMathQuestions: Question[] = [
   ...generatedTimeQuestions,
 ];
 
+const JAPANESE_PASSAGE_GROUPS: Record<string, string> = {};
+
+function assignGroup(ids: string[], passageId: string) {
+  for (const id of ids) JAPANESE_PASSAGE_GROUPS[id] = passageId;
+}
+
+// R5 groups
+for (let i = 1; i <= 6; i++) assignGroup([`r5-jp-reading-${i}`], "r5-ninomiya");
+for (let i = 1; i <= 4; i++) assignGroup([`r5-jp-document-${i}`], "r5-jiten");
+for (let i = 8; i <= 11; i++) assignGroup([`r5-jp-document-${i}`], "r5-kaze");
+
+// R6 groups
+for (let i = 1; i <= 6; i++) assignGroup([`r6-jp-reading-${i}`], "r6-water");
+for (let i = 1; i <= 4; i++) assignGroup([`r6-jp-document-${i}`], "r6-email");
+for (let i = 5; i <= 9; i++) assignGroup([`r6-jp-document-${i}`], "r6-envelope");
+
+// R7 groups
+for (let i = 1; i <= 5; i++) assignGroup([`r7-jp-reading-${i}`], "r7-hermit");
+for (let i = 1; i <= 4; i++) assignGroup([`r7-jp-document-${i}`], "r7-phone");
+for (let i = 5; i <= 8; i++) assignGroup([`r7-jp-document-${i}`], "r7-resume");
+
+// R8 groups
+for (let i = 1; i <= 6; i++) assignGroup([`r8-jp-reading-${i}`], "r8-hearn");
+for (let i = 1; i <= 4; i++) assignGroup([`r8-jp-document-${i}`], "r8-hiking");
+for (let i = 5; i <= 12; i++) assignGroup([`r8-jp-document-${i}`], "r8-smartphone");
+
 export const allJapaneseQuestions: Question[] = [
   ...r5JapaneseQuestions,
   ...r6JapaneseQuestions,
   ...r7JapaneseQuestions,
   ...r8JapaneseQuestions,
-];
+].map((q) => ({
+  ...q,
+  passageId: JAPANESE_PASSAGE_GROUPS[q.id] ?? q.passageId,
+}));
 
 export const allQuestions: Question[] = [...allMathQuestions, ...allJapaneseQuestions];
 
