@@ -1,13 +1,21 @@
 import { useState } from "react";
 import type { Question } from "../types/question";
 import { checkAnswer } from "../utils/grading";
+import { getAnswerHint } from "../utils/answerHint";
 import TableDisplay from "./TableDisplay";
+
+interface SavedState {
+  userAnswer: string;
+  isCorrect: boolean;
+}
 
 interface Props {
   question: Question;
   questionNumber: number;
   totalQuestions: number;
-  onAnswer: (correct: boolean) => void;
+  savedState?: SavedState;
+  onBack?: () => void;
+  onAnswer: (correct: boolean, userAnswer: string) => void;
   onNext: () => void;
 }
 
@@ -15,19 +23,23 @@ export default function QuestionCard({
   question,
   questionNumber,
   totalQuestions,
+  savedState,
+  onBack,
   onAnswer,
   onNext,
 }: Props) {
-  const [userAnswer, setUserAnswer] = useState("");
-  const [answered, setAnswered] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
+  const [userAnswer, setUserAnswer] = useState(savedState?.userAnswer ?? "");
+  const [answered, setAnswered] = useState(!!savedState);
+  const [isCorrect, setIsCorrect] = useState(savedState?.isCorrect ?? false);
+
+  const hint = getAnswerHint(question);
 
   const handleAnswer = () => {
     if (!userAnswer.trim()) return;
     const correct = checkAnswer(userAnswer, question.answer);
     setIsCorrect(correct);
     setAnswered(true);
-    onAnswer(correct);
+    onAnswer(correct, userAnswer);
   };
 
   const handleNext = () => {
@@ -94,15 +106,48 @@ export default function QuestionCard({
           </div>
         )}
 
+        {/* 選択式（回答済み） */}
+        {question.type === "single_choice" && question.choices && answered && (
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            {question.choices.map((choice) => {
+              const isSelected = userAnswer === choice;
+              const isCorrectChoice = Array.isArray(question.answer)
+                ? question.answer.includes(choice)
+                : question.answer === choice;
+              return (
+                <div
+                  key={choice}
+                  className={`py-4 px-4 rounded-xl border-2 text-lg font-bold ${
+                    isCorrectChoice
+                      ? "border-green-500 bg-green-50 text-green-700"
+                      : isSelected
+                      ? "border-red-400 bg-red-50 text-red-600"
+                      : "border-gray-200 bg-gray-50 text-gray-400"
+                  }`}
+                >
+                  {choice}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* テキスト・数値入力 */}
         {(question.type === "text" || question.type === "number") && !answered && (
-          <input
-            type="text"
-            value={userAnswer}
-            onChange={(e) => setUserAnswer(e.target.value)}
-            placeholder="答えを入力してください"
-            className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-xl mt-4 focus:border-blue-500 focus:outline-none"
-          />
+          <>
+            {hint && (
+              <p className="mt-3 text-gray-400 text-base tracking-widest font-mono">
+                {hint}
+              </p>
+            )}
+            <input
+              type="text"
+              value={userAnswer}
+              onChange={(e) => setUserAnswer(e.target.value)}
+              placeholder="答えを入力してください"
+              className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-xl mt-2 focus:border-blue-500 focus:outline-none"
+            />
+          </>
         )}
 
         {!answered && (
@@ -128,6 +173,9 @@ export default function QuestionCard({
           <p className={`text-2xl font-bold mb-2 ${isCorrect ? "text-green-600" : "text-orange-600"}`}>
             {isCorrect ? "正解！" : "もう少し！"}
           </p>
+          {(question.type === "text" || question.type === "number") && (
+            <p className="text-base text-gray-500 mb-1">あなたの答え：{userAnswer}</p>
+          )}
           {!isCorrect && (
             <p className="text-lg mb-2">
               <span className="font-bold">正しい答え：</span>
@@ -139,12 +187,22 @@ export default function QuestionCard({
             <p className="text-gray-600 leading-relaxed">{question.explanation}</p>
           </div>
 
-          <button
-            onClick={handleNext}
-            className="w-full mt-4 bg-blue-500 text-white text-xl font-bold py-4 rounded-xl hover:bg-blue-600 transition-colors"
-          >
-            次の問題 →
-          </button>
+          <div className={`flex gap-3 mt-4 ${onBack ? "" : ""}`}>
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="flex-1 bg-gray-200 text-gray-700 text-lg font-bold py-4 rounded-xl hover:bg-gray-300 transition-colors"
+              >
+                ← 前の問題
+              </button>
+            )}
+            <button
+              onClick={handleNext}
+              className="flex-1 bg-blue-500 text-white text-lg font-bold py-4 rounded-xl hover:bg-blue-600 transition-colors"
+            >
+              次の問題 →
+            </button>
+          </div>
         </div>
       )}
     </div>

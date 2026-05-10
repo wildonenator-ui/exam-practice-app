@@ -45,4 +45,5 @@ export interface Question {
   difficulty?: 1 | 2 | 3 | 4 | 5;
   tags?: string[];
   passageId?: string;
+  answerHint?: string;
 }
