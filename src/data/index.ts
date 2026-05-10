@@ -3,6 +3,7 @@ import r4MathQuestions from "./questions/math/past-exams/r4";
 import r5MathQuestions from "./questions/math/past-exams/r5";
 import r6MathQuestions from "./questions/math/past-exams/r6";
 import r7MathQuestions from "./questions/math/past-exams/r7";
+import r8MathQuestions from "./questions/math/past-exams/r8";
 import generatedTimeQuestions from "./questions/math/generated/time";
 
 export const allQuestions: Question[] = [
@@ -10,6 +11,7 @@ export const allQuestions: Question[] = [
   ...r5MathQuestions,
   ...r6MathQuestions,
   ...r7MathQuestions,
+  ...r8MathQuestions,
   ...generatedTimeQuestions,
 ];
 
@@ -32,6 +34,7 @@ export const YEARS: { value: Year; label: string }[] = [
   { value: "R5", label: "令和5年度" },
   { value: "R6", label: "令和6年度" },
   { value: "R7", label: "令和7年度" },
+  { value: "R8", label: "令和8年度" },
 ];
 
 export const CATEGORIES: { value: MathCategory; label: string }[] = [

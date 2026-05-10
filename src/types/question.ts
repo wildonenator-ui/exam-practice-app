@@ -1,7 +1,7 @@
 export type Subject = "math" | "japanese";
 export type SourceType = "past_exam" | "generated";
 export type QuestionType = "single_choice" | "text" | "number" | "multi_part";
-export type Year = "R4" | "R5" | "R6" | "R7";
+export type Year = "R4" | "R5" | "R6" | "R7" | "R8";
 
 export type MathCategory =
   | "calculation"
