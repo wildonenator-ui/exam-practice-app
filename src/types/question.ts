@@ -44,4 +44,5 @@ export interface Question {
   imageNote?: string;
   difficulty?: 1 | 2 | 3 | 4 | 5;
   tags?: string[];
+  passageId?: string;
 }
