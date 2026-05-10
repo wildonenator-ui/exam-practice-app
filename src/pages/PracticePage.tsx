@@ -21,7 +21,8 @@ export default function PracticePage() {
   useEffect(() => {
     let qs: Question[] = [];
     if (mode === "year") {
-      qs = getQuestionsByYear(value as Year);
+      const subject = searchParams.get("subject") ?? "math";
+      qs = getQuestionsByYear(value as Year, subject);
     } else if (mode === "category") {
       qs = getQuestionsByCategory(value);
     } else if (mode === "generated") {
@@ -31,11 +32,12 @@ export default function PracticePage() {
       navigate("/");
       return;
     }
-    setQuestions(shuffle(qs));
+    // 年度別は出題順を維持、それ以外はシャッフル
+    setQuestions(mode === "year" ? qs : shuffle(qs));
     setCurrentIndex(0);
     setResults([]);
     setDone(false);
-  }, [mode, value, navigate]);
+  }, [mode, value, searchParams, navigate]);
 
   const handleAnswer = (correct: boolean) => {
     const q = questions[currentIndex];

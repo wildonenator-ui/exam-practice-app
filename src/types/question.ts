@@ -13,6 +13,15 @@ export type MathCategory =
   | "geometry"
   | "word_problem";
 
+export type JapaneseCategory =
+  | "kanji"
+  | "roman"
+  | "conjugation"
+  | "idiom"
+  | "particle"
+  | "reading"
+  | "document";
+
 export interface TableData {
   title?: string;
   headers: string[];
