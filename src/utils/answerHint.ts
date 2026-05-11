@@ -4,10 +4,39 @@ function boxes(answer: string): string {
   return "□".repeat([...answer].length);
 }
 
+const MATH_UNIT_PATTERNS: Array<[RegExp, string]> = [
+  [/何(度)/, "度"],
+  [/何(cm²|cm|㎡|㎠|km|m)/, "$1"],
+  [/何(g|kg|mL|dL|L)/, "$1"],
+  [/何(点|杯|個|枚|本|冊|台|人|匹|羽|頭)/, "$1"],
+  [/いくら/, "円"],
+  [/何(円)/, "円"],
+];
+
+function extractMathUnit(questionText: string): string | null {
+  for (const [pattern, unit] of MATH_UNIT_PATTERNS) {
+    const m = questionText.match(pattern);
+    if (m) {
+      // If unit contains a back-reference, use capture group; otherwise use literal
+      return unit.startsWith("$") ? m[1] : unit;
+    }
+  }
+  return null;
+}
+
 export function getAnswerHint(question: Question): string | null {
   if (question.type !== "text" && question.type !== "number") return null;
-  if (question.questionText.includes("□")) return null; // blank already visible in text
   if (question.answerHint) return question.answerHint;
+
+  // Math: only show a unit suffix hint, never show □□ boxes
+  if (question.subject === "math") {
+    const unit = extractMathUnit(question.questionText);
+    if (unit) return `（＿＿＿＿＿${unit}）`;
+    return null;
+  }
+
+  // Japanese: skip if blank already visible in the question text
+  if (question.questionText.includes("□")) return null;
 
   const answers = Array.isArray(question.answer) ? question.answer : [question.answer];
 
