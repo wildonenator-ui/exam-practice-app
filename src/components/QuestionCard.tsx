@@ -42,13 +42,6 @@ export default function QuestionCard({
     onAnswer(correct, userAnswer);
   };
 
-  const handleNext = () => {
-    setUserAnswer("");
-    setAnswered(false);
-    setIsCorrect(false);
-    onNext();
-  };
-
   const correctAnswerDisplay = Array.isArray(question.answer)
     ? question.answer[0]
     : question.answer;
@@ -186,25 +179,25 @@ export default function QuestionCard({
             <p className="font-bold text-gray-700 mb-1">考え方：</p>
             <p className="text-gray-600 leading-relaxed">{question.explanation}</p>
           </div>
-
-          <div className="flex gap-3 mt-4">
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="flex-1 bg-gray-200 text-gray-700 text-lg font-bold py-4 rounded-xl hover:bg-gray-300 transition-colors"
-              >
-                ← 前の問題
-              </button>
-            )}
-            <button
-              onClick={handleNext}
-              className="flex-1 bg-blue-500 text-white text-lg font-bold py-4 rounded-xl hover:bg-blue-600 transition-colors"
-            >
-              次の問題 →
-            </button>
-          </div>
         </div>
       )}
+
+      {/* 常時表示ナビゲーション */}
+      <div className="flex gap-3 mb-8">
+        <button
+          onClick={onBack}
+          disabled={!onBack}
+          className="flex-1 bg-gray-200 text-gray-700 text-lg font-bold py-4 rounded-xl hover:bg-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          ← 前の問題
+        </button>
+        <button
+          onClick={onNext}
+          className="flex-1 bg-blue-500 text-white text-lg font-bold py-4 rounded-xl hover:bg-blue-600 transition-colors"
+        >
+          次の問題 →
+        </button>
+      </div>
     </div>
   );
 }
