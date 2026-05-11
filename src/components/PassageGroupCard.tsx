@@ -244,9 +244,9 @@ export default function PassageGroupCard({
         })}
       </div>
 
-      {/* 送信 / ナビゲーション */}
-      <div className="mt-5 mb-8">
-        {!submitted ? (
+      {/* 答えを確認するボタン（全問入力済み・未送信のとき） */}
+      {!submitted && (
+        <div className="mt-5">
           <button
             onClick={handleSubmit}
             disabled={!allFilled}
@@ -254,24 +254,24 @@ export default function PassageGroupCard({
           >
             答えを確認する
           </button>
-        ) : (
-          <div className="flex gap-3">
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="flex-1 bg-gray-200 text-gray-700 text-lg font-bold py-4 rounded-xl hover:bg-gray-300 transition-colors"
-              >
-                ← 前の問題
-              </button>
-            )}
-            <button
-              onClick={onNext}
-              className="flex-1 bg-blue-500 text-white text-lg font-bold py-4 rounded-xl hover:bg-blue-600 transition-colors"
-            >
-              次の問題 →
-            </button>
-          </div>
-        )}
+        </div>
+      )}
+
+      {/* 常時表示ナビゲーション */}
+      <div className="flex gap-3 mt-4 mb-8">
+        <button
+          onClick={onBack}
+          disabled={!onBack}
+          className="flex-1 bg-gray-200 text-gray-700 text-lg font-bold py-4 rounded-xl hover:bg-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          ← 前の問題
+        </button>
+        <button
+          onClick={onNext}
+          className="flex-1 bg-blue-500 text-white text-lg font-bold py-4 rounded-xl hover:bg-blue-600 transition-colors"
+        >
+          次の問題 →
+        </button>
       </div>
     </div>
   );
